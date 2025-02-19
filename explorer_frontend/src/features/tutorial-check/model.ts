@@ -11,7 +11,7 @@ export const tutorialCheckDomain = createDomain("tutorial-check");
 
 export const $tutorialCheck = tutorialCheckDomain.createStore<TutorialCheck>({
   stage: 0,
-  check: async () => {},
+  check: async () => { },
 });
 
 export const deployTutorialContract = tutorialCheckDomain.createEvent<{
@@ -37,6 +37,9 @@ export const runTutorialCheckFx = tutorialCheckDomain.createEffect(
 );
 
 fetchTutorialCheckFx.use(async (stage) => {
-  const tutorialCheck = spec.find((check) => check.stage === stage)!;
+  const tutorialCheck = spec.find((check) => check.stage === stage);
+  if (!tutorialCheck) {
+    throw new Error('Tutorial check not found');
+  }
   return tutorialCheck;
 });

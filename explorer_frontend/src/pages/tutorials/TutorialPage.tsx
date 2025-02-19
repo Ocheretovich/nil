@@ -148,7 +148,10 @@ export const TutorialPage = () => {
                     width: "8px",
                   })}
                 />
-                <Panel minSize={20} defaultSize={33} maxSize={90}>
+                <Panel minSize={20} defaultSize={33} maxSize={90} className={css({
+                  backgroundColor: COLORS.blue900,
+                  borderRadius: "8px"
+                })}>
                   <Tabs
                     onChange={({ activeKey }) => {
                       setActiveKey(activeKey);
@@ -184,12 +187,16 @@ export const TutorialPage = () => {
                           justifyContent: "center",
                           fontSize: "16px",
                           fontWeight: "400",
+                          ':hover': {
+                            backgroundColor: COLORS.blue800,
+                          }
                         },
                       },
                     }}
                   >
-                    <Tab title="Tutorial">
-                      <TutorialText />
+                    <Tab title="Tutorials">
+                      {selectedTutorial ? (<TutorialText />) : (<TutorialsPanel tutorials={tutorials} />)}
+
                     </Tab>
                     <Tab title="Contracts" disabled={!tutorialChecks}>
                       <ContractsContainer />

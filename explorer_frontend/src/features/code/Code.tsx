@@ -8,8 +8,9 @@ import {
   compile,
   compileCodeFx,
   fetchCodeSnippetFx,
-  сlickOnContractsButton,
-  сlickOnLogButton,
+  isTutorialPage,
+  clickOnContractsButton,
+  clickOnLogButton,
 } from "./model";
 import "./init";
 import { type Diagnostic, linter } from "@codemirror/lint";
@@ -35,14 +36,16 @@ const MemoizedCodeToolbar = memo(CodeToolbar);
 
 export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
   const [isMobile] = useMobile();
-  const [code, isDownloading, errors, fetchingCodeSnippet, compiling, warnings] = useUnit([
-    $code,
-    fetchSolidityCompiler.pending,
-    $error,
-    fetchCodeSnippetFx.pending,
-    compileCodeFx.pending,
-    $warnings,
-  ]);
+  const [code, isDownloading, errors, fetchingCodeSnippet, compiling, warnings, isTutorial] =
+    useUnit([
+      $code,
+      fetchSolidityCompiler.pending,
+      $error,
+      fetchCodeSnippetFx.pending,
+      compileCodeFx.pending,
+      $warnings,
+      isTutorialPage
+    ]);
   const [css] = useStyletron();
   const compilerVersionButton =
     extraToolbarButton === undefined ? <CompilerVersionButton disabled={isDownloading} /> : null;
@@ -161,6 +164,7 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
                     whiteSpace: "nowrap",
                     lineHeight: 1,
                     marginLeft: "auto",
+
                   },
                 },
               }}
@@ -179,7 +183,6 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
               alignItems: "center",
               width: "100%",
               height: "100%",
-              backgroundColor: COLORS.gray900,
               borderTopLeftRadius: "12px",
               borderTopRightRadius: "12px",
               borderBottomLeftRadius: "12px",
@@ -193,7 +196,6 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
             className={css({
               width: "100%",
               height: `calc(100% - ${isMobile ? "32px - 8px - 8px - 48px - 8px - 48px - 8px" : "48px - 8px"})`,
-              backgroundColor: COLORS.gray900,
               borderTopLeftRadius: "12px",
               borderTopRightRadius: "12px",
               borderBottomLeftRadius: "12px",
@@ -213,6 +215,7 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
                 height: "100%",
                 overflow: "auto!important",
                 overscrollBehavior: "contain",
+                backgroundColor: isTutorial ? `${COLORS.blue900} !important` : COLORS.gray900,
               })}
               data-testid="code-field"
             />
@@ -238,6 +241,7 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
                   style: {
                     lineHeight: 1,
                     gridColumn: "1 / 3",
+
                   },
                 },
               }}
@@ -250,13 +254,20 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
                 Root: {
                   style: {
                     gridColumn: "1 / 2",
+                    ...(isTutorial ? {
+                      backgroundColor: COLORS.blue800,
+                      ':hover': {
+                        backgroundColor: COLORS.blue700,
+                      }
+                    } : {}
+                    )
                   },
                 },
               }}
               kind={BUTTON_KIND.secondary}
               size={BUTTON_SIZE.large}
               onClick={() => {
-                сlickOnLogButton();
+                clickOnLogButton();
               }}
             >
               Logs
@@ -266,13 +277,20 @@ export const Code = ({ extraMobileButton, extraToolbarButton }: CodeProps) => {
                 Root: {
                   style: {
                     gridColumn: "2 / 3",
+                    ...(isTutorial ? {
+                      backgroundColor: COLORS.blue800,
+                      ':hover': {
+                        backgroundColor: COLORS.blue700,
+                      }
+                    } : {}
+                    )
                   },
                 },
               }}
               kind={BUTTON_KIND.secondary}
               size={BUTTON_SIZE.large}
               onClick={() => {
-                сlickOnContractsButton();
+                clickOnContractsButton();
               }}
             >
               Contracts

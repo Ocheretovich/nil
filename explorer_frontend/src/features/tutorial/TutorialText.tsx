@@ -18,14 +18,22 @@ import { useUnit } from "effector-react";
 import Markdown from "react-markdown";
 import { useStyletron } from "styletron-react";
 import { getMobileStyles } from "../../styleHelpers";
-import { сlickOnBackButton } from "../code/model";
+import { isTutorialPage, clickOnBackButton } from "../code/model";
 import { useMobile } from "../shared";
 import { linkStyles } from "../shared/components/Link";
 import { $tutorial } from "./model";
+import { $tutorialChecksState, clickOnTutorialsBackButton, TutorialChecksStatus } from "../../pages/tutorials/model";
+import { runTutorialCheck, runTutorialCheckFx } from "../tutorial-check/model";
+import { Divider } from "../shared/components/Divider";
 
 export const TutorialText = () => {
   const [isMobile] = useMobile();
-  const tutorial = useUnit($tutorial);
+  const [tutorial, isTutorial, runningChecks, tutorialChecks] = useUnit([
+    $tutorial,
+    isTutorialPage,
+    runTutorialCheckFx.pending,
+    $tutorialChecksState,
+  ]);
 
   const [css] = useStyletron();
   const HeaderOne = (props: any) => (
@@ -76,6 +84,7 @@ export const TutorialText = () => {
         Content: {
           style: {
             display: "inline",
+            backgroundColor: COLORS.blue900,
           },
         },
       }}
@@ -85,50 +94,45 @@ export const TutorialText = () => {
   const CustomLink = (props: any) => <Link {...props} to={props.href} style={linkStyles.link} />;
   const CustomCodeField = ({ node, inline, className, children, ...props }: any) => {
     const codeContent = Array.isArray(children) ? children.join("") : children;
-    return <CodeField code={codeContent} {...props} />;
+    return <CodeField
+      className={css({
+        backgroundColor: `${COLORS.blue800} !important`,
+      })}
+      code={codeContent}
+      themeOverrides={{
+        settings: {
+          background: COLORS.blue800,
+        }
+      }} {...props} />;
   };
 
+  let checkButtonBckgColor: string;
+  switch (tutorialChecks) {
+    case TutorialChecksStatus.Successful:
+      checkButtonBckgColor = COLORS.green200;
+      break;
+    case TutorialChecksStatus.Failed:
+      checkButtonBckgColor = COLORS.red200;
+      break;
+    case TutorialChecksStatus.Initialized:
+      checkButtonBckgColor = COLORS.yellow200;
+      break;
+    default:
+      checkButtonBckgColor = COLORS.black;
+      break;
+  }
+
   return (
-    <Card
-      overrides={{
-        Root: {
-          style: {
-            maxWidth: isMobile ? "calc(100vw - 20px)" : "none",
-            width: isMobile ? "100%" : "none",
-            height: "91%",
-            backgroundColor: COLORS.gray900,
-            paddingRight: "0",
-            paddingLeft: "0",
-            flexDirection: "column",
-            paddingBottom: "24px",
-          },
-        },
-        Contents: {
-          style: {
-            height: "100%",
-            maxWidth: "none",
-            width: "100%",
-            paddingRight: "24px",
-            paddingLeft: "24px",
-            overflow: "auto",
-            overscrollBehavior: "contain",
-            display: "flex",
-            flexDirection: "column",
-            ...getMobileStyles({
-              height: "calc(100vh - 154px)",
-            }),
-          },
-        },
-        Body: {
-          style: {
-            height: "auto",
-            width: "100%",
-            maxWidth: "none",
-          },
-        },
-      }}
-    >
-      {isMobile && (
+    <div className={css({
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+      position: "relative",
+      ...getMobileStyles({
+        height: "calc(100vh - 109px)",
+      }),
+    })}>
+      {!isMobile && (
         <div
           className={css({
             display: "flex",
@@ -147,12 +151,16 @@ export const TutorialText = () => {
                 style: {
                   paddingLeft: 0,
                   paddingRight: 0,
+                  backgroundColor: isTutorial ? COLORS.blue800 : COLORS.gray800,
+                  ":hover": {
+                    backgroundColor: isTutorial ? COLORS.blue700 : COLORS.gray700,
+                  }
                 },
               },
             }}
             kind={BUTTON_KIND.secondary}
             size={BUTTON_SIZE.compact}
-            onClick={() => сlickOnBackButton()}
+            onClick={() => clickOnTutorialsBackButton()}
           >
             <ArrowUpIcon
               size={12}
@@ -160,23 +168,150 @@ export const TutorialText = () => {
                 transform: "rotate(-90deg)",
               })}
             />
+
           </Button>
-          <LabelMedium color={COLORS.gray50}>Tutorial</LabelMedium>
+          <LabelMedium color={COLORS.gray50}>Tutorials</LabelMedium>
         </div>
       )}
-      <Markdown
-        components={{
-          h1: HeaderOne,
-          h2: HeaderTwo,
-          p: CustomParagraph,
-          li: CustomListItem,
-          code: CustomCodeField,
-          em: CustomItalics,
-          a: CustomLink,
+      <Card
+        overrides={{
+          Root: {
+            style: {
+              maxWidth: isMobile ? "calc(100vw - 20px)" : "none",
+              width: isMobile ? "100%" : "none",
+              height: "100%",
+              backgroundColor: COLORS.blue900,
+              paddingRight: "0",
+              paddingLeft: "0",
+              flexDirection: "column",
+              paddingBottom: "24px",
+              display: "flex",
+              flexGrow: 1,
+              overflow: "hidden",
+            },
+          },
+          Contents: {
+            style: {
+              maxWidth: "none",
+              width: "100%",
+              paddingBottom: "24px",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              padding: "8px",
+              overflow: "hidden",
+              ...getMobileStyles({
+                height: "calc(100vh - 154px)",
+              }),
+            },
+          },
+          Body: {
+            style: {
+              height: "auto",
+              width: "100%",
+              maxWidth: "none",
+              overflowY: "auto",
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+            },
+          },
         }}
       >
-        {tutorial.text}
-      </Markdown>
-    </Card>
+        {isMobile && (
+          <div
+            className={css({
+              display: "flex",
+              gap: "12px",
+              marginBottom: SPACE[12],
+              alignItems: "center",
+            })}
+          >
+            <Button
+              className={css({
+                width: "32px",
+                height: "32px",
+              })}
+              overrides={{
+                Root: {
+                  style: {
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                    backgroundColor: isTutorial ? COLORS.blue800 : COLORS.gray800,
+                    ":hover": {
+                      backgroundColor: isTutorial ? COLORS.blue700 : COLORS.gray700,
+                    }
+                  },
+                },
+              }}
+              kind={BUTTON_KIND.secondary}
+              size={BUTTON_SIZE.compact}
+              onClick={() => clickOnBackButton()}
+            >
+              <ArrowUpIcon
+                size={12}
+                className={css({
+                  transform: "rotate(-90deg)",
+                })}
+              />
+            </Button>
+            <LabelMedium color={COLORS.gray50}>Tutorials</LabelMedium>
+          </div>
+        )}
+        <div className={css({
+          flexGrow: 1,
+          overflowY: "auto",
+          paddingRight: "8px",
+        })}>
+          <Markdown
+            components={{
+              h1: HeaderOne,
+              h2: HeaderTwo,
+              p: CustomParagraph,
+              li: CustomListItem,
+              code: CustomCodeField,
+              em: CustomItalics,
+              a: CustomLink,
+            }}
+          >
+            {tutorial.text}
+          </Markdown>
+          <div className={css({
+            marginTop: "18px",
+          })}></div>
+          <Divider />
+          <div
+            className={css({
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "end"
+            })}
+          >
+            <Button
+              kind={BUTTON_KIND.secondary}
+              isLoading={runningChecks}
+              size={BUTTON_SIZE.default}
+              onClick={() => runTutorialCheck()}
+              disabled={tutorialChecks === TutorialChecksStatus.NotInitialized}
+              overrides={{
+                Root: {
+                  style: {
+                    whiteSpace: "nowrap",
+                    lineHeight: 1,
+                    marginLeft: "auto",
+                    backgroundColor: checkButtonBckgColor,
+                    color: COLORS.black,
+                    marginTop: "18px",
+                  },
+                },
+              }}
+              data-testid="run-checks-button"
+            >
+              Run Checks
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 };

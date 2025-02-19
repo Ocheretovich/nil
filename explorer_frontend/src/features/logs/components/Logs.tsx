@@ -15,13 +15,13 @@ import "../init";
 import { useStyletron } from "baseui";
 import { useCallback, useEffect, useRef } from "react";
 import { getMobileStyles } from "../../../styleHelpers";
-import { сlickOnBackButton } from "../../code/model";
+import { isTutorialPage, clickOnBackButton } from "../../code/model";
 import { ClearIcon, useMobile } from "../../shared";
 import { $logs, clearLogs } from "../model";
 import { LogsGreeting } from "./LogsGreeting";
 
 export const Logs = () => {
-  const [logs] = useUnit([$logs]);
+  const [logs, isTutorial] = useUnit([$logs, isTutorialPage]);
   const [css] = useStyletron();
   const [isMobile] = useMobile();
   const lastItemRef = useRef<HTMLDivElement>(null);
@@ -65,12 +65,16 @@ export const Logs = () => {
                 style: {
                   paddingLeft: 0,
                   paddingRight: 0,
+                  backgroundColor: isTutorial ? COLORS.blue800 : COLORS.gray800,
+                  ":hover": {
+                    backgroundColor: isTutorial ? COLORS.blue700 : COLORS.gray700,
+                  }
                 },
               },
             }}
             kind={BUTTON_KIND.secondary}
             size={BUTTON_SIZE.compact}
-            onClick={() => сlickOnBackButton()}
+            onClick={() => clickOnBackButton()}
           >
             <ArrowUpIcon
               size={12}
@@ -86,7 +90,7 @@ export const Logs = () => {
         overrides={{
           Root: {
             style: {
-              backgroundColor: "#212121",
+              backgroundColor: (isTutorial ? COLORS.blue900 : COLORS.gray900),
               width: "100%",
               maxWidth: "none",
               height: "100%",
@@ -171,6 +175,10 @@ export const Logs = () => {
                   position: "absolute",
                   top: "16px",
                   right: "16px",
+                  backgroundColor: (isTutorial ? COLORS.blue800 : COLORS.gray800),
+                  ':hover': {
+                    backgroundColor: (isTutorial ? COLORS.blue700 : COLORS.gray700),
+                  }
                 },
               },
             }}

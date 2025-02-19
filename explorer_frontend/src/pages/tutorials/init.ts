@@ -1,9 +1,10 @@
 import { persist } from "effector-storage/session";
 import {
   compileCodeFx,
-  сlickOnBackButton,
-  сlickOnContractsButton,
-  сlickOnLogButton,
+  loadedTutorialPage,
+  clickOnBackButton,
+  clickOnContractsButton,
+  clickOnLogButton,
 } from "../../features/code/model";
 import {
   $activeComponentTutorial,
@@ -11,18 +12,40 @@ import {
   TutorialChecksStatus,
   TutorialLayoutComponent,
   setTutorialChecksState,
-  сlickOnTutorialButton,
+  openTutorialText,
+  setSelectedTutorial,
+  $selectedTutorial,
+  clickOnTutorialsBackButton,
 } from "./model";
+import { sample } from "effector";
+import { tutorialWithStageRoute } from "../../features/routing/routes/tutorialRoute";
 
-$activeComponentTutorial.on(сlickOnLogButton, () => TutorialLayoutComponent.Logs);
-$activeComponentTutorial.on(сlickOnContractsButton, () => TutorialLayoutComponent.Contracts);
-$activeComponentTutorial.on(сlickOnBackButton, () => TutorialLayoutComponent.Code);
-$activeComponentTutorial.on(сlickOnTutorialButton, () => TutorialLayoutComponent.TutorialText);
-$tutorialChecksState.on(setTutorialChecksState, (_, payload) => {
-  console.log("setTutorialChecksState", payload);
-  return payload;
+$activeComponentTutorial.on(clickOnLogButton, () => TutorialLayoutComponent.Logs);
+$activeComponentTutorial.on(clickOnContractsButton, () => TutorialLayoutComponent.Contracts);
+$activeComponentTutorial.on(clickOnBackButton, () => TutorialLayoutComponent.Code);
+$activeComponentTutorial.on(openTutorialText, () => TutorialLayoutComponent.TutorialText);
+$activeComponentTutorial.on(clickOnTutorialsBackButton, () => TutorialLayoutComponent.Tutorials);
+$tutorialChecksState.on(setTutorialChecksState, (_, payload) => payload);
+$tutorialChecksState.on(compileCodeFx.doneData, () => TutorialChecksStatus.Initialized);
+
+sample({
+  clock: setSelectedTutorial,
+  target: $selectedTutorial,
+});
+
+sample({
+  clock: clickOnTutorialsBackButton,
+  fn: () => null,
+  target: setSelectedTutorial,
+});
+
+sample({
+  clock: [loadedTutorialPage, tutorialWithStageRoute.$params],
+  fn: () => TutorialChecksStatus.NotInitialized,
+  target: setTutorialChecksState,
 });
 $tutorialChecksState.on(compileCodeFx.doneData, () => TutorialChecksStatus.Initialized);
+
 
 persist({
   store: $activeComponentTutorial,

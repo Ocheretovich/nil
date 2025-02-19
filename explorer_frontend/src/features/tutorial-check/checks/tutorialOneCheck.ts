@@ -8,6 +8,7 @@ import type { App } from "../../../types";
 import { $rpcUrl, $smartAccount } from "../../account-connector/model";
 import { $contracts, deploySmartContractFx } from "../../contracts/models/base";
 import { tutorialContractStepFailedEvent, tutorialContractStepPassedEvent } from "../model";
+import { setCompletedTutorial } from "../../tutorial/model";
 
 async function runTutorialCheckOne() {
   const client = new PublicClient({
@@ -28,16 +29,12 @@ async function runTutorialCheckOne() {
     sourcecode: callerContract.sourcecode,
   };
 
-  console.log("appCaller", appCaller.sourcecode);
-
   const appReceiver: App = {
     name: "Receiver",
     bytecode: receiverContract.bytecode,
     abi: receiverContract.abi,
     sourcecode: receiverContract.sourcecode,
   };
-
-  console.log("appReceiver", appReceiver.sourcecode);
 
   const smartAccount = $smartAccount.getState()!;
 
@@ -71,7 +68,7 @@ async function runTutorialCheckOne() {
 
   if (checkCaller) {
     setTutorialChecksState(TutorialChecksStatus.Failed);
-    console.log("current state", $tutorialChecksState.getState());
+    console.log(resCaller);
     tutorialContractStepFailedEvent("Failed to call Caller.sendValue()!");
     return;
   }
@@ -87,6 +84,8 @@ async function runTutorialCheckOne() {
   tutorialContractStepPassedEvent("Receiver got 300_000 tokens!");
   setTutorialChecksState(TutorialChecksStatus.Successful);
   tutorialContractStepPassedEvent("Tutorial has been completed successfully!");
+
+  setCompletedTutorial(1);
 }
 
 export default runTutorialCheckOne;

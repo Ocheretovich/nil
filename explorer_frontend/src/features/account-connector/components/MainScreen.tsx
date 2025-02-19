@@ -35,6 +35,7 @@ import {
 } from "../model";
 import { Token } from "./Token";
 import { styles } from "./styles";
+import { isTutorialPage } from "../../code/model";
 
 const btnOverrides: ButtonOverrides = {
   Root: {
@@ -50,8 +51,8 @@ const MainScreen = () => {
   const [copied, setCopied] = useState(false);
   const rpcUrl = useUnit($rpcUrl);
   const latestActivity = useUnit($latestActivity);
-  const [smartAccount, balance, balanceToken, isPendingSmartAccountCreation, rpcIsHealthy] =
-    useUnit([$smartAccount, $balance, $balanceToken, createSmartAccountFx.pending, $rpcIsHealthy]);
+  const [smartAccount, balance, balanceToken, isPendingSmartAccountCreation, rpcIsHealthy, isTutorial] =
+    useUnit([$smartAccount, $balance, $balanceToken, createSmartAccountFx.pending, $rpcIsHealthy, isTutorialPage]);
   const [isPendingTopUp] = useUnit([topUpSmartAccountBalanceFx.pending]);
   const displayBalance = balance === null ? "-" : formatEther(balance);
   const [isMobile] = useMobile();
@@ -117,7 +118,7 @@ const MainScreen = () => {
           alignItems: "center",
           gap: "24px",
           top: 0,
-          backgroundColor: COLORS.gray800,
+          backgroundColor: isTutorial ? COLORS.blue900 : COLORS.gray900,
         })}
       >
         <LabelLarge>Smart Account</LabelLarge>
@@ -155,11 +156,11 @@ const MainScreen = () => {
                   style: {
                     flex: 1,
                     height: "48px",
-                    background: COLORS.gray700,
-                    boxShadow: "none",
+                    backgroundColor: isTutorial ? COLORS.blue800 : COLORS.gray800,
                     ":hover": {
-                      background: COLORS.gray600,
+                      backgroundColor: isTutorial ? COLORS.blue700 : COLORS.gray700,
                     },
+                    boxShadow: "none",
                   },
                 },
               }}

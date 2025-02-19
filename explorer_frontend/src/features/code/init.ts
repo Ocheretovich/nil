@@ -25,7 +25,10 @@ import {
   updateRecentProjects,
 } from "./model";
 
-$code.on(changeCode, (_, x) => x);
+$code.on(changeCode, (_, x) => {
+  console.log(x);
+  return x;
+});
 
 persist({
   key: "code",

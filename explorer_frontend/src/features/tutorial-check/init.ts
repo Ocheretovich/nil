@@ -1,4 +1,4 @@
-import { sample } from "effector";
+import { combine, sample } from "effector";
 import { $smartAccount } from "../account-connector/model";
 import { loadedTutorialPage } from "../code/model";
 import { deploySmartContractFx } from "../contracts/models/base";
@@ -21,7 +21,7 @@ sample({
 });
 
 sample({
-  clock: loadedTutorialPage,
+  clock: [loadedTutorialPage, tutorialWithStageRoute.$params],
   source: tutorialWithStageRoute.$params,
   fn: (params) => Number(params.stage),
   filter: (stage) => stage !== undefined,
@@ -47,3 +47,10 @@ sample({
   }),
   target: deploySmartContractFx,
 });
+
+// sample(
+//   {
+//     clock: fetchTutorialCheckFx.failData,
+//     fn: () => notFoundRoute.open()
+//   }
+// );

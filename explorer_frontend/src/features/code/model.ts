@@ -70,11 +70,11 @@ export const loadedPlaygroundPage = codeDomain.createEvent();
 
 export const loadedTutorialPage = codeDomain.createEvent();
 
-export const сlickOnLogButton = codeDomain.createEvent();
+export const clickOnLogButton = codeDomain.createEvent();
 
-export const сlickOnContractsButton = codeDomain.createEvent();
+export const clickOnContractsButton = codeDomain.createEvent();
 
-export const сlickOnBackButton = codeDomain.createEvent();
+export const clickOnBackButton = codeDomain.createEvent();
 
 export const $recentProjects = codeDomain.createStore<Record<string, string>>({});
 
