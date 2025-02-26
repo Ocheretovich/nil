@@ -52,6 +52,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/icza/bitio v1.1.0
 	github.com/ipfs/go-log/v2 v2.5.1
+	github.com/jonboulle/clockwork v0.5.0
 	github.com/klauspost/compress v1.18.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/viper v1.19.0
