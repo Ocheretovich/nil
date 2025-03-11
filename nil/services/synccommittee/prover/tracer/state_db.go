@@ -776,7 +776,7 @@ func (tsdb *TracerStateDB) GetInTransaction() *types.Transaction {
 
 // Get execution context shard id
 func (tsdb *TracerStateDB) GetShardID() types.ShardId {
-	panic("not implemented")
+	return tsdb.shardId
 }
 
 // SaveVmState saves current VM state

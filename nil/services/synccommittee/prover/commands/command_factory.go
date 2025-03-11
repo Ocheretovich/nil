@@ -33,7 +33,7 @@ func (factory *CommandFactory) MakeHandlerCommandForTaskType(taskType types.Task
 		return NewMergeProofCmd(factory.config), nil
 	case types.AggregateProofs:
 		return NewAggregateProofCmd(factory.config), nil
-	case types.ProofBlock:
+	case types.ProofBlock, types.ProofBatch:
 		return nil, types.NewTaskErrNotSupportedType(taskType)
 	case types.TaskTypeNone:
 		return nil, types.NewTaskExecErrorf(types.TaskErrInvalidTask, "TaskType cannot be None")

@@ -76,7 +76,7 @@ func (h *taskHandler) Handle(ctx context.Context, executorId types.TaskExecutorI
 }
 
 func (h *taskHandler) handleImpl(ctx context.Context, task *types.Task) (*executionResult, error) {
-	if task.TaskType == types.ProofBlock {
+	if task.TaskType == types.ProofBatch {
 		return nil, types.NewTaskErrNotSupportedType(task.TaskType)
 	}
 

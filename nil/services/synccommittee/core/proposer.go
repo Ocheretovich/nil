@@ -49,6 +49,7 @@ type ProposerParams struct {
 	Endpoint          string
 	PrivateKey        string
 	ContractAddress   string
+	DisableL1         bool
 	ProposingInterval time.Duration
 	EthClientTimeout  time.Duration
 }
@@ -58,6 +59,7 @@ func NewDefaultProposerParams() ProposerParams {
 		Endpoint:          "http://rpc2.sepolia.org",
 		PrivateKey:        "0000000000000000000000000000000000000000000000000000000000000001",
 		ContractAddress:   "0x796baf7E572948CD0cbC374f345963bA433b47a2",
+		DisableL1:         false,
 		ProposingInterval: 10 * time.Second,
 		EthClientTimeout:  10 * time.Second,
 	}
@@ -121,8 +123,12 @@ func (p *proposer) Run(ctx context.Context, started chan<- struct{}) error {
 	return nil
 }
 
+func (p *proposer) isL1Initialized() bool {
+	return (p.rollupContractWrapper != nil) || p.params.DisableL1
+}
+
 func (p *proposer) initRollupContractWrapper(ctx context.Context) error {
-	if p.rollupContractWrapper != nil {
+	if p.isL1Initialized() {
 		return nil
 	}
 
@@ -156,14 +162,20 @@ func (p *proposer) initializeProvedStateRoot(ctx context.Context) error {
 			Msg("failed to get state root from L1, stored proved state root will be used")
 
 	case storedStateRoot == nil:
-		p.logger.Info().
-			Stringer("latestStateRoot", latestStateRoot).
-			Msg("proved state root is not initialized, value from L1 will be used")
-		if err := p.updateStoredStateRoot(ctx, latestStateRoot); err != nil {
-			return err
+		if latestStateRoot == common.EmptyHash {
+			p.logger.Info().
+				Msg("proved state root and value from L1 are not initialized")
+			return nil
+		} else {
+			p.logger.Info().
+				Stringer("latestStateRoot", latestStateRoot).
+				Msg("proved state root is not initialized, value from L1 will be used")
+			if err := p.updateStoredStateRoot(ctx, latestStateRoot); err != nil {
+				return err
+			}
 		}
 
-	case *storedStateRoot != latestStateRoot:
+	case (*storedStateRoot != latestStateRoot && latestStateRoot != common.EmptyHash):
 		p.logger.Warn().
 			Str("storedStateRoot", storedRootStr).
 			Stringer("latestStateRoot", latestStateRoot).
@@ -195,7 +207,7 @@ func (p *proposer) updateStoredStateRoot(ctx context.Context, stateRoot common.H
 }
 
 func (p *proposer) proposeNextBlock(ctx context.Context) error {
-	if p.rollupContractWrapper == nil {
+	if !p.isL1Initialized() {
 		err := p.initializeProvedStateRoot(ctx)
 		if err != nil {
 			return err
@@ -224,6 +236,10 @@ func (p *proposer) proposeNextBlock(ctx context.Context) error {
 }
 
 func (p *proposer) getLatestProvedStateRoot(ctx context.Context) (common.Hash, error) {
+	if p.params.DisableL1 {
+		return common.EmptyHash, nil
+	}
+
 	if err := p.initRollupContractWrapper(ctx); err != nil {
 		return common.EmptyHash, err
 	}
@@ -344,6 +360,9 @@ func (p *proposer) updateState(ctx context.Context, tx *ethtypes.Transaction, da
 }
 
 func (p *proposer) sendProof(ctx context.Context, data *scTypes.ProposalData) error {
+	if p.params.DisableL1 {
+		return nil
+	}
 	// TODO: populate with actual data
 	blobs := []kzg4844.Blob{{0x01}, {0x02}, {0x03}}
 	batchIndexInBlobStorage := "0x0000000000000000000000000000000000000000000000000000000000000001"

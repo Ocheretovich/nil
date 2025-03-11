@@ -115,6 +115,7 @@ type Task struct {
 	ShardId      types.ShardId     `json:"shardId"`
 	BlockNum     types.BlockNumber `json:"blockNum"`
 	BlockHash    common.Hash       `json:"blockHash"`
+	BlockIds     []BlockId         `json:"blockIds"`
 	TaskType     TaskType          `json:"taskType"`
 	CircuitType  CircuitType       `json:"circuitType"`
 	ParentTaskId *TaskId           `json:"parentTaskId"`
@@ -302,6 +303,38 @@ func NewAggregateProofsTaskEntry(
 	}
 }
 
+func NewBatchProofTaskEntry(
+	batchId BatchId, orderedBlocks []*jsonrpc.RPCBlock, currentTime time.Time,
+) (*TaskEntry, error) {
+	if len(orderedBlocks) == 0 {
+		return nil, errors.New("no blocks for create proof batch task")
+	}
+
+	blockIds := make([]BlockId, len(orderedBlocks))
+	for i, b := range orderedBlocks {
+		blockIds[i].ShardId = b.ShardId
+		blockIds[i].Hash = b.Hash
+	}
+
+	task := Task{
+		Id:        NewTaskId(),
+		BatchId:   batchId,
+		ShardId:   types.MainShardId,       // TODO remove
+		BlockNum:  orderedBlocks[0].Number, // TODO remove
+		BlockHash: orderedBlocks[0].Hash,   // TODO remove
+		BlockIds:  blockIds,
+		TaskType:  ProofBatch,
+	}
+
+	batchProofEntry := &TaskEntry{
+		Task:    task,
+		Created: currentTime,
+		Status:  WaitingForExecutor,
+	}
+
+	return batchProofEntry, nil
+}
+
 func NewBlockProofTaskEntry(
 	batchId BatchId, aggregateProofsTask *TaskEntry, execShardBlock *jsonrpc.RPCBlock, currentTime time.Time,
 ) (*TaskEntry, error) {
@@ -339,6 +372,7 @@ func NewPartialProveTaskEntry(
 	shardId types.ShardId,
 	blockNum types.BlockNumber,
 	blockHash common.Hash,
+	blockIds []BlockId,
 	circuitType CircuitType,
 	currentTime time.Time,
 ) *TaskEntry {
@@ -348,6 +382,7 @@ func NewPartialProveTaskEntry(
 		ShardId:     shardId,
 		BlockNum:    blockNum,
 		BlockHash:   blockHash,
+		BlockIds:    blockIds,
 		TaskType:    PartialProve,
 		CircuitType: circuitType,
 	}

@@ -38,6 +38,7 @@ type AggregatorBlockStorage interface {
 	TryGetProvedStateRoot(ctx context.Context) (*common.Hash, error)
 	TryGetLatestBatchId(ctx context.Context) (*types.BatchId, error)
 	SetBlockBatch(ctx context.Context, batch *types.BlockBatch) error
+	SetProvedStateRoot(ctx context.Context, stateRoot common.Hash) error
 }
 
 type AggregatorConfig struct {
@@ -237,8 +238,19 @@ func (agg *aggregator) getLatestHandledBlockRef(ctx context.Context) (*types.Mai
 		return nil, fmt.Errorf("error reading latest proved state root: %w", err)
 	}
 	if latestProvedRoot == nil {
-		agg.logger.Debug().Msg("Latest proved state root is not defined")
-		return nil, nil
+		agg.logger.Debug().Msg("Latest proved state root is not defined, parent of the latest block wil be used")
+
+		latestRpcBlock, err := agg.rpcClient.GetBlock(ctx, coreTypes.MainShardId, "latest", false)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching latest main block: %w", err)
+		}
+		if latestRpcBlock == nil {
+			return nil, errors.New("can't fetch the latest block")
+		}
+		if err := agg.blockStorage.SetProvedStateRoot(ctx, latestRpcBlock.ParentHash); err != nil {
+			return nil, fmt.Errorf("failed set proved state root: %w", err)
+		}
+		latestProvedRoot = &latestRpcBlock.ParentHash
 	}
 
 	rpcBlock, err := agg.rpcClient.GetBlock(ctx, coreTypes.MainShardId, *latestProvedRoot, false)

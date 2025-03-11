@@ -68,13 +68,13 @@ func execute() error {
 			if err != nil {
 				return err
 			}
-			traceConfig.ShardID, err = types.ParseShardIdFromString(args[1])
-			if err != nil {
-				return err
-			}
-			traceConfig.BlockIDs = make([]transport.BlockReference, len(args)-2)
+			traceConfig.BlockIDs = make([]tracer.BlockId, len(args)-2)
 			for i, blockArg := range args[2:] {
-				traceConfig.BlockIDs[i], err = transport.AsBlockReference(blockArg)
+				traceConfig.BlockIDs[i].ShardId, err = types.ParseShardIdFromString(args[1])
+				if err != nil {
+					return err
+				}
+				traceConfig.BlockIDs[i].Id, err = transport.AsBlockReference(blockArg)
 				if err != nil {
 					return err
 				}

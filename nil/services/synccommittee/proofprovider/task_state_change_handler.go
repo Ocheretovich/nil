@@ -38,7 +38,7 @@ func (h taskStateChangeHandler) OnTaskTerminated(ctx context.Context, task *type
 		return nil
 	}
 
-	if task.TaskType != types.MergeProof && task.TaskType != types.AggregateProofs {
+	if task.TaskType != types.MergeProof {
 		log.NewTaskEvent(h.logger, zerolog.DebugLevel, task).Msgf("Task has type %d, skipping", task.TaskType)
 		return nil
 	}

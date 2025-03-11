@@ -58,6 +58,7 @@ func addFlags(cmd *cobra.Command, cfg *cmdConfig) {
 	cmd.Flags().StringVar(&cfg.ProposerParams.PrivateKey, "l1-private-key", cfg.ProposerParams.PrivateKey, "L1 account private key")
 	cmd.Flags().StringVar(&cfg.ProposerParams.ContractAddress, "l1-contract-address", cfg.ProposerParams.ContractAddress, "L1 update state contract address")
 	cmd.Flags().DurationVar(&cfg.ProposerParams.EthClientTimeout, "l1-client-timeout", cfg.ProposerParams.EthClientTimeout, "L1 client timeout")
+	cmd.Flags().BoolVar(&cfg.ProposerParams.DisableL1, "disable-l1", cfg.ProposerParams.DisableL1, "Disable send trancations to L1")
 	logLevel := cmd.Flags().String("log-level", "info", "log level: trace|debug|info|warn|error|fatal|panic")
 
 	// Telemetry flags

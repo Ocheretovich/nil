@@ -63,7 +63,7 @@ func (cmd *partialProofCmd) MakeCommandDefinition(task *types.Task) (*CommandDef
 	resultFiles[types.PreprocessedCommonData] = commonDataFile
 
 	commitmentStateFile := filepath.Join(cmd.outDir, "commitment_state"+filePostfix)
-	commitmentStateArg := []string{"--updated-commitment-state-file", commitmentStateFile}
+	commitmentStateArg := []string{"--updated-lpc-scheme-file", commitmentStateFile}
 	resultFiles[types.CommitmentState] = commitmentStateFile
 
 	allArgs := slices.Concat(stage, circuitName, assignmentDescArg, traceArg, partialProofArg, challengeArg, thetaPowerArg, commitmentStateArg, commonDataArg)
@@ -79,18 +79,27 @@ func (cmd *partialProofCmd) MakeCommandDefinition(task *types.Task) (*CommandDef
 }
 
 func (cmd *partialProofCmd) getTraceFileName(task *types.Task) string {
-	return filepath.Join(cmd.outDir, fmt.Sprintf("trace.%v.%v", task.ShardId, task.BlockHash))
+	return filepath.Join(cmd.outDir, fmt.Sprintf("trace.%v", task.BatchId))
 }
 
 func (cmd *partialProofCmd) BeforeCommandExecuted(ctx context.Context, task *types.Task, results types.TaskOutputArtifacts) error {
 	traceFileName := cmd.getTraceFileName(task)
-	cmd.logger.Info().Msgf("Tracer arguments: trace --nil-endpoint %v %v %v %v", cmd.nilRpcEndpoint, traceFileName, task.ShardId, task.BlockHash.String())
+	blockIds := make([]tracer.BlockId, len(task.BlockIds))
+	var shardIdsStr string
+	var blockIdsStr string
+	for i, blockId := range task.BlockIds {
+		blockIds[i].ShardId = blockId.ShardId
+		shardIdsStr += blockId.ShardId.String() + " "
+		blockRef := transport.HashBlockReference(blockId.Hash)
+		blockIds[i].Id = blockRef
+		blockIdsStr += blockId.Hash.String() + " "
+	}
+	cmd.logger.Info().Msgf("Tracer arguments: trace --nil-endpoint %v %v %v %v", cmd.nilRpcEndpoint, traceFileName, shardIdsStr, blockIdsStr)
 
 	tracerConfig := tracer.TraceConfig{
 		MarshalMode:  tracer.MarshalModeBinary,
-		ShardID:      task.ShardId,
+		BlockIDs:     blockIds,
 		BaseFileName: traceFileName,
-		BlockIDs:     []transport.BlockReference{transport.HashBlockReference(task.BlockHash)},
 	}
 	return tracer.GenerateTrace(ctx, cmd.client, &tracerConfig)
 }

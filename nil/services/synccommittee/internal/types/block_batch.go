@@ -122,20 +122,16 @@ func (b *BlockBatch) AllBlocks() []*jsonrpc.RPCBlock {
 	return blocks
 }
 
+// TODO: update signature CreateProofTask(currentTime time.Time) (*TaskEntry, error)
 func (b *BlockBatch) CreateProofTasks(currentTime time.Time) ([]*TaskEntry, error) {
-	taskEntries := make([]*TaskEntry, 0, len(b.ChildBlocks)+1)
+	taskEntries := make([]*TaskEntry, 0, 1)
 
-	aggregateProofsTask := NewAggregateProofsTaskEntry(b.Id, b.MainShardBlock, currentTime)
-	taskEntries = append(taskEntries, aggregateProofsTask)
-
-	for _, childBlock := range b.ChildBlocks {
-		blockProofTask, err := NewBlockProofTaskEntry(b.Id, aggregateProofsTask, childBlock, currentTime)
-		if err != nil {
-			return nil, err
-		}
-
-		taskEntries = append(taskEntries, blockProofTask)
+	batchProofTask, err := NewBatchProofTaskEntry(b.Id, b.AllBlocks(), currentTime)
+	if err != nil {
+		return nil, err
 	}
+
+	taskEntries = append(taskEntries, batchProofTask)
 
 	return taskEntries, nil
 }

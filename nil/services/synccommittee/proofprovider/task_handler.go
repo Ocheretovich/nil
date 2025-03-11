@@ -37,7 +37,7 @@ func newTaskHandler(
 }
 
 func (h *taskHandler) Handle(ctx context.Context, executorId types.TaskExecutorId, task *types.Task) error {
-	if (task.TaskType != types.ProofBlock) && (task.TaskType != types.AggregateProofs) {
+	if task.TaskType != types.ProofBatch {
 		return types.NewTaskErrNotSupportedType(task.TaskType)
 	}
 	// skip task
@@ -62,20 +62,13 @@ func (h *taskHandler) Handle(ctx context.Context, executorId types.TaskExecutorI
 
 	log.NewTaskEvent(h.logger, zerolog.InfoLevel, task).Msg("Creating proof tasks for block")
 
-	var err error
-	if task.TaskType == types.ProofBlock {
-		blockTasks := h.prepareTasksForBlock(task)
+	blockTasks := h.prepareTasksForBatch(task)
 
-		for _, taskEntry := range blockTasks {
-			taskEntry.Task.ParentTaskId = &task.Id
-		}
-
-		err = h.taskStorage.AddTaskEntries(ctx, blockTasks...)
-	} else {
-		currentTime := h.timer.NowTime()
-		aggregateTaskEntry := task.AsNewChildEntry(currentTime)
-		err = h.taskStorage.AddTaskEntries(ctx, aggregateTaskEntry)
+	for _, taskEntry := range blockTasks {
+		taskEntry.Task.ParentTaskId = &task.Id
 	}
+
+	err := h.taskStorage.AddTaskEntries(ctx, blockTasks...)
 
 	if err != nil {
 		log.NewTaskEvent(h.logger, zerolog.ErrorLevel, task).Err(err).Msg("Failed to create proof task")
@@ -85,7 +78,7 @@ func (h *taskHandler) Handle(ctx context.Context, executorId types.TaskExecutorI
 	return err
 }
 
-func (h *taskHandler) prepareTasksForBlock(providerTask *types.Task) []*types.TaskEntry {
+func (h *taskHandler) prepareTasksForBatch(providerTask *types.Task) []*types.TaskEntry {
 	currentTime := h.timer.NowTime()
 	taskEntries := make([]*types.TaskEntry, 0)
 
@@ -154,7 +147,7 @@ func (h *taskHandler) prepareTasksForBlock(providerTask *types.Task) []*types.Ta
 	// Create partial proof tasks (bottom level, no dependencies)
 	for ct := range types.Circuits() {
 		partialProveTaskEntry := types.NewPartialProveTaskEntry(
-			providerTask.BatchId, providerTask.ShardId, providerTask.BlockNum, providerTask.BlockHash, ct, currentTime,
+			providerTask.BatchId, providerTask.ShardId, providerTask.BlockNum, providerTask.BlockHash, providerTask.BlockIds, ct, currentTime,
 		)
 		taskEntries = append(taskEntries, partialProveTaskEntry)
 

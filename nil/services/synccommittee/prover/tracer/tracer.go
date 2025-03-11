@@ -28,9 +28,13 @@ type RemoteTracerImpl struct {
 
 var _ RemoteTracer = new(RemoteTracerImpl)
 
+type BlockId struct {
+	ShardId types.ShardId
+	Id      transport.BlockReference
+}
+
 type TraceConfig struct {
-	ShardID      types.ShardId
-	BlockIDs     []transport.BlockReference
+	BlockIDs     []BlockId
 	BaseFileName string
 	MarshalMode  MarshalMode
 }
@@ -160,8 +164,8 @@ func GenerateTrace(ctx context.Context, rpcClient api.RpcClient, cfg *TraceConfi
 		return err
 	}
 	aggTraces := NewExecutionTraces()
-	for _, blockID := range cfg.BlockIDs {
-		err := remoteTracer.GetBlockTraces(ctx, aggTraces, cfg.ShardID, blockID)
+	for _, blockId := range cfg.BlockIDs {
+		err := remoteTracer.GetBlockTraces(ctx, aggTraces, blockId.ShardId, blockId.Id)
 		if err != nil {
 			return err
 		}

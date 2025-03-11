@@ -83,36 +83,11 @@ func (s *TaskHandlerTestSuite) TestReturnErrorOnUnexpectedTaskType() {
 	}
 }
 
-func (s *TaskHandlerTestSuite) TestHandleAggregateProofsTask() {
+func (s *TaskHandlerTestSuite) TestHandleBatchProofTask() {
 	now := s.timer.NowTime()
 	executorId := testaide.RandomExecutorId()
-	mainBlock := testaide.NewMainShardBlock()
-	taskEntry := types.NewAggregateProofsTaskEntry(types.NewBatchId(), mainBlock, now)
-	aggProofsTask := taskEntry.Task
-
-	err := s.taskHandler.Handle(s.context, executorId, &taskEntry.Task)
-	s.Require().NoError(err)
-
-	otherExecutorId := testaide.RandomExecutorId()
-	requestedTask, err := s.taskStorage.RequestTaskToExecute(s.context, otherExecutorId)
-	s.Require().NoError(err)
-	s.Require().NotNil(requestedTask)
-
-	s.Require().NotEqual(aggProofsTask.Id, requestedTask.Id)
-	s.Require().Equal(&aggProofsTask.Id, requestedTask.ParentTaskId)
-
-	s.Require().Equal(aggProofsTask.BatchId, requestedTask.BatchId)
-	s.Require().Equal(aggProofsTask.ShardId, requestedTask.ShardId)
-	s.Require().Equal(aggProofsTask.BlockNum, requestedTask.BlockNum)
-	s.Require().Equal(aggProofsTask.BlockHash, requestedTask.BlockHash)
-}
-
-func (s *TaskHandlerTestSuite) TestHandleBlockProofTask() {
-	now := s.timer.NowTime()
-	executorId := testaide.RandomExecutorId()
-	execBlock := testaide.NewExecutionShardBlock()
-	aggregateProofsEntry := types.NewAggregateProofsTaskEntry(types.NewBatchId(), execBlock, now)
-	taskEntry, err := types.NewBlockProofTaskEntry(types.NewBatchId(), aggregateProofsEntry, execBlock, now)
+	batch := testaide.NewBlockBatch(testaide.ShardsCount)
+	taskEntry, err := types.NewBatchProofTaskEntry(types.NewBatchId(), batch.AllBlocks(), now)
 	s.Require().NoError(err)
 
 	err = s.taskHandler.Handle(s.context, executorId, &taskEntry.Task)
