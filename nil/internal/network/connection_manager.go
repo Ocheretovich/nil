@@ -8,7 +8,6 @@ import (
 
 	"github.com/jonboulle/clockwork"
 	libp2pconnmgr "github.com/libp2p/go-libp2p/core/connmgr"
-	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
@@ -293,8 +292,8 @@ func newConnectionManagerWithPeerReputationTracking(
 	}, nil
 }
 
-func TryGetPeerReputationTracker(host host.Host) PeerReputationTracker {
-	notifee, ok := host.ConnManager().Notifee().(*notifiee)
+func TryGetPeerReputationTracker(manager *Manager) PeerReputationTracker {
+	notifee, ok := manager.host.ConnManager().Notifee().(*notifiee)
 	if !ok {
 		return nil
 	}

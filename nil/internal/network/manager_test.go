@@ -123,7 +123,7 @@ func (s *ManagerSuite) TestPeerReport() {
 	m2 := s.newManager()
 	defer m2.Close()
 
-	peerReporter := TryGetPeerReputationTracker(m1.host)
+	peerReporter := TryGetPeerReputationTracker(m1)
 	s.Require().NotNil(peerReporter)
 
 	s.Run("Connect", func() {

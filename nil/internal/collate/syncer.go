@@ -197,9 +197,16 @@ func (s *Syncer) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			s.logger.Debug().Msg("Syncer is terminated")
 			return nil
-		case data := <-ch:
-			saved, err := s.processTopicTransaction(ctx, data)
+		case msg := <-ch:
+			saved, err := s.processTopicTransaction(ctx, msg.Data)
 			if err != nil {
+				if errors.As(err, new(errInvalidSignature)) {
+					if peerReputationTracker := network.TryGetPeerReputationTracker(s.networkManager); peerReputationTracker != nil {
+						peerReputationTracker.ReportPeer(msg.ReceivedFrom, network.ReputationChangeInvalidBlockSignature)
+					} else {
+						s.logger.Warn().Msg("Peer reputation tracker is not available")
+					}
+				}
 				s.logger.Error().Err(err).Msg("Failed to process topic transaction")
 			}
 			if !saved {
