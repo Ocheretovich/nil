@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -269,9 +268,6 @@ func (e *exporter) startDriverExport(ctx context.Context) error {
 			// read available blocks
 			for len(e.blocksChan) > 0 && len(blockBuffer) < BlockBufferSize {
 				blockBuffer = append(blockBuffer, <-e.blocksChan)
-			}
-			if len(e.blocksChan) > 0 {
-				return errors.New("block buffer is full")
 			}
 
 			if len(blockBuffer) == 0 {

@@ -52,7 +52,7 @@ let
 
   format = pkgs.formats.yaml { };
 
-  configFiles = pkgs.stdenv.mkDerivation rec {
+  configFiles = pkgs.stdenv.mkDerivation {
     name = "devnet-configs";
     src = format.generate "devnet.yaml" devnetConfig;
     dontUnpack = true;
@@ -78,6 +78,14 @@ in {
   environment.systemPackages = [ nil configFiles pkgs.vim ];
 
   environment.etc."nild".source = "${configFiles}/etc";
+
+  environment.etc."exporter/exporter.yaml".text = ''
+    clickhouse-password: ""
+    clickhouse-endpoint: 127.0.0.1:9000
+    clickhouse-login: "default"
+    clickhouse-database: "nil_database"
+    api-endpoint: http://127.0.0.1:8529
+  '';
 
   users.users.nil = {
     isSystemUser = true;
@@ -145,7 +153,26 @@ in {
 
         };
       };
-    }) devnetConfig.nil_archive_config));
+    }) devnetConfig.nil_archive_config)) //
+
+    {
+      exporter = {
+        description = "exporter service";
+        after = [ "network.target" "clickhouse.service" ];
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          ExecStart = "${nil}/bin/exporter -c /etc/exporter/exporter.yaml";
+          Restart = "always";
+          User = "nil";
+          Group = "nil";
+          WorkingDirectory = "/var/lib/exporter";
+          StateDirectory = "exporter";
+          RuntimeDirectory = "exporter";
+          BeforeStart = ''
+            ${pkgs.clickhouse}/bin/clickhouse-client --query "CREATE DATABASE IF NOT EXISTS nil_database"'';
+        };
+      };
+    };
 
   services.nginx = {
     enable = true;
@@ -158,4 +185,6 @@ in {
       default = true;
     };
   };
+
+  services.clickhouse = { enable = true; };
 }
