@@ -23,6 +23,8 @@ This project is an implementation of =nil; in Go.
 * [Packaging](#packaging)
 * [Debugging](#debugging)
 
+[![](https://github.com/NilFoundation/nil/actions/workflows/build_artifacts.yml/badge.svg)](https://github.com/NilFoundation/nil/actions/workflows/build_artifacts.yml)
+
 ## Building and using the project
 
 ### Prerequisites
