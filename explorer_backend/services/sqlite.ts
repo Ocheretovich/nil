@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import BetterSqlite3 from "better-sqlite3";
 
-const db: BetterSqlite3.Database = new BetterSqlite3("./database.db");
+const db: BetterSqlite3.Database = new BetterSqlite3(process.env.EXPLORER_DB || "./database.db");
 
 export { db };
 

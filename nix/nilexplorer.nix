@@ -1,13 +1,5 @@
-{ lib
-, stdenv
-, biome
-, python3
-, callPackage
-, npmHooks
-, nodejs
-, enableTesting ? false
-, cypress
-}:
+{ lib, stdenv, biome, python3, callPackage, npmHooks, nodejs
+, enableTesting ? false, cypress }:
 
 stdenv.mkDerivation rec {
   name = "explorer";
@@ -26,12 +18,7 @@ stdenv.mkDerivation rec {
 
   NODE_PATH = "$npmDeps";
 
-  nativeBuildInputs = [
-    nodejs
-    npmHooks.npmConfigHook
-    biome
-    python3
-  ];
+  nativeBuildInputs = [ nodejs npmHooks.npmConfigHook biome python3 ];
 
   dontConfigure = true;
 
@@ -45,6 +32,7 @@ stdenv.mkDerivation rec {
 
   buildPhase = ''
     patchShebangs explorer_frontend/node_modules
+    patchShebangs node_modules
 
     (cd smart-contracts; npm run build)
     (cd niljs; npm run build)
@@ -84,7 +72,10 @@ stdenv.mkDerivation rec {
 
   installPhase = ''
     mkdir -p $out
-    mv explorer_frontend/ $out/frontend
-    mv explorer_backend/ $out/backend
+    mv explorer_frontend/ $out/explorer_frontend
+    mv explorer_backend/ $out/explorer_backend
+    mv niljs $out/niljs
+    mv node_modules $out/node_modules
+    mv smart-contracts $out/smart-contracts
   '';
 }
